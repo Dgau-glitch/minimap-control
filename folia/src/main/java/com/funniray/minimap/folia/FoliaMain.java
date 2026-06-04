@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -73,7 +74,17 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+        schedulePlayerSettingsRefresh(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onPlayerRegisterChannel(PlayerRegisterChannelEvent event) {
+        if (isMinimapChannel(event.getChannel())) {
+            schedulePlayerSettingsRefresh(event.getPlayer());
+        }
+    }
+
+    private void schedulePlayerSettingsRefresh(Player player) {
         schedulerService.runForPlayer(player, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
     }
 

@@ -34,6 +34,16 @@ public class FoliaSchedulerService {
         return target.getScheduler().runDelayed(plugin, scheduledTask -> validatedTask.run(), () -> { }, delayTicks) != null;
     }
 
+    public boolean runForPlayerOrNow(Player player, Runnable task) {
+        Player target = Objects.requireNonNull(player, "player");
+        if (isOnPlayerThread(target)) {
+            runIfPlayerAvailable(target, task);
+            return true;
+        }
+
+        return runForPlayer(target, task);
+    }
+
     public <T> CompletableFuture<T> supplyForPlayer(Player player, Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         Player target = Objects.requireNonNull(player, "player");

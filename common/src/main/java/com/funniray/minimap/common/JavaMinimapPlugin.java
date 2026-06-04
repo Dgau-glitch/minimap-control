@@ -56,6 +56,10 @@ public abstract class JavaMinimapPlugin implements MinimapPlugin {
         listenChannels.forEach(this::unregisterChannel);
     }
 
+    protected boolean isMinimapChannel(String channel) {
+        return listenChannels.contains(channel);
+    }
+
     public void loadConfig() {
         synchronized (configLock) {
             try {
