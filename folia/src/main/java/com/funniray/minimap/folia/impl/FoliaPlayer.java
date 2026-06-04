@@ -20,7 +20,7 @@ public class FoliaPlayer implements MinimapPlayer {
 
     @Override
     public void sendPluginMessage(byte[] message, String channel) {
-        nativePlayer.getScheduler().run(FoliaMinimap.getInstance(), task -> nativePlayer.sendPluginMessage(FoliaMinimap.getInstance(), channel, message), null);
+        FoliaMinimap.getInstance().getSchedulerService().runForPlayer(nativePlayer, () -> nativePlayer.sendPluginMessage(FoliaMinimap.getInstance(), channel, message));
     }
 
     @Override

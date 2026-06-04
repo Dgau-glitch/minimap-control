@@ -1,11 +1,13 @@
 package com.funniray.minimap.folia;
 
+import com.funniray.minimap.folia.service.FoliaSchedulerService;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FoliaMinimap extends JavaPlugin {
     private static FoliaMinimap instance;
-    private final FoliaMain main = new FoliaMain(this);
+    private final FoliaSchedulerService schedulerService = new FoliaSchedulerService(this);
+    private final FoliaMain main = new FoliaMain(this, schedulerService);
 
     public ViaHook viaHook;
     public boolean viaHooked;
@@ -43,6 +45,10 @@ public final class FoliaMinimap extends JavaPlugin {
             this.adventure.close();
             this.adventure = null;
         }
+    }
+
+    public FoliaSchedulerService getSchedulerService() {
+        return schedulerService;
     }
 
     public static FoliaMinimap getInstance() {
