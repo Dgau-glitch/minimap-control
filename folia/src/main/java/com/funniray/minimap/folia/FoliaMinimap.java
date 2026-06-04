@@ -1,11 +1,14 @@
 package com.funniray.minimap.folia;
 
+import com.funniray.minimap.folia.impl.FoliaServer;
+import com.funniray.minimap.folia.service.FoliaSchedulerService;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FoliaMinimap extends JavaPlugin {
     private static FoliaMinimap instance;
-    private final FoliaMain main = new FoliaMain(this);
+    private final FoliaSchedulerService schedulerService = new FoliaSchedulerService(this);
+    private final FoliaMain main = new FoliaMain(this, schedulerService);
 
     public ViaHook viaHook;
     public boolean viaHooked;
@@ -24,13 +27,14 @@ public final class FoliaMinimap extends JavaPlugin {
         // Plugin startup logic
         instance = this;
         this.adventure = BukkitAudiences.create(this);
+        FoliaServer.refreshWorldSnapshot();
         getServer().getPluginManager().registerEvents(main, this);
         main.enableSelf();
 
         try {
             this.viaHook = new ViaHook();
             this.viaHooked = true;
-        } catch (ClassNotFoundException | NoClassDefFoundError e ) {
+        } catch (ReflectiveOperationException | NoClassDefFoundError e ) {
             // failed to hook viaversion. Expected if viaversion isn't installed.
         }
     }
@@ -39,10 +43,15 @@ public final class FoliaMinimap extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         main.disableSelf();
+        getLogger().info("Disabled");
         if(this.adventure != null) {
             this.adventure.close();
             this.adventure = null;
         }
+    }
+
+    public FoliaSchedulerService getSchedulerService() {
+        return schedulerService;
     }
 
     public static FoliaMinimap getInstance() {

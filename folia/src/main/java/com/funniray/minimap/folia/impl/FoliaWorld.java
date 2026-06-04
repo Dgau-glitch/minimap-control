@@ -2,31 +2,27 @@ package com.funniray.minimap.folia.impl;
 
 import com.funniray.minimap.common.api.MinimapLocation;
 import com.funniray.minimap.common.api.MinimapWorld;
-import org.bukkit.*;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 public class FoliaWorld implements MinimapWorld {
-    private World nativeWorld;
+    private final World nativeWorld;
+    private final String name;
+    private final String keyedName;
 
     public FoliaWorld(World nativeWorld) {
         this.nativeWorld = nativeWorld;
+        this.name = nativeWorld.getName();
+        this.keyedName = nativeWorld.getKey().toString();
     }
 
     @Override
     public String getName() {
-        return nativeWorld.getName();
+        return name;
     }
 
     public String getKeyedName() {
-        try {
-            Method getKey = nativeWorld.getClass().getMethod("getKey");
-            NamespacedKey key = (NamespacedKey) getKey.invoke(nativeWorld);
-            return key.toString();
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            return getName();
-        }
+        return keyedName;
     }
 
     @Override

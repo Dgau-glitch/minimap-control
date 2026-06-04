@@ -18,6 +18,8 @@ import java.util.List;
 public abstract class JavaMinimapPlugin implements MinimapPlugin {
     private static JavaMinimapPlugin instance;
 
+    private final Object configLock = new Object();
+    private final Object configSaveLock = new Object();
     private MinimapConfig config;
 
     private static final List<String> listenChannels = Arrays.asList(
@@ -51,21 +53,23 @@ public abstract class JavaMinimapPlugin implements MinimapPlugin {
 
     @Override
     public void disableSelf() {
-        System.out.println("Disabled");
+        listenChannels.forEach(this::unregisterChannel);
     }
 
     public void loadConfig() {
-        try {
-            final CommentedConfigurationNode node = getConfigLoader().load();
-            config = node.get(MinimapConfig.class);
-            node.set(MinimapConfig.class, config);
-            final String version = new JMVersion().journeymap_version.full;
-            config.globalJourneymapConfig.configVersion = version;
-            config.defaultWorldConfig.configVersion = version;
-            config.getWorldConfigs().forEach((world)->world.journeymapConfig.configVersion = version);
-            getConfigLoader().save(node);
-        } catch (ConfigurateException e) {
-            e.printStackTrace();
+        synchronized (configLock) {
+            try {
+                final CommentedConfigurationNode node = getConfigLoader().load();
+                config = node.get(MinimapConfig.class);
+                node.set(MinimapConfig.class, config);
+                final String version = new JMVersion().journeymap_version.full;
+                config.globalJourneymapConfig.configVersion = version;
+                config.defaultWorldConfig.configVersion = version;
+                config.getWorldConfigs().forEach((world)->world.journeymapConfig.configVersion = version);
+                getConfigLoader().save(node);
+            } catch (ConfigurateException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -92,22 +96,48 @@ public abstract class JavaMinimapPlugin implements MinimapPlugin {
     public void handlePlayerLeft(MinimapPlayer player) {}
 
     public void saveConfig() {
-        try {
-            final CommentedConfigurationNode node = getConfigLoader().load();
-            node.set(MinimapConfig.class, config);
-            getConfigLoader().save(node);
-        } catch (ConfigurateException e) {
-            e.printStackTrace();
+        saveConfigSnapshot(snapshotConfig());
+    }
+
+    protected MinimapConfig snapshotConfig() {
+        synchronized (configLock) {
+            try {
+                CommentedConfigurationNode node = getConfigLoader().createNode();
+                node.set(MinimapConfig.class, config);
+                return node.get(MinimapConfig.class);
+            } catch (ConfigurateException e) {
+                throw new RuntimeException("Failed to create config snapshot", e);
+            }
+        }
+    }
+
+    protected void saveConfigSnapshot(MinimapConfig snapshot) {
+        synchronized (configSaveLock) {
+            try {
+                final CommentedConfigurationNode node = getConfigLoader().load();
+                node.set(MinimapConfig.class, snapshot);
+                getConfigLoader().save(node);
+            } catch (ConfigurateException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void withConfigLock(Runnable action) {
+        synchronized (configLock) {
+            action.run();
         }
     }
 
     public JMConfig getEffectiveJMConfig(MinimapPlayer player) {
-        JMWorldConfig worldConfig = this.getConfig().getWorldConfig(player.getLocation().getWorld().getName()).journeymapConfig;
-        JMConfig config = this.getConfig().globalJourneymapConfig;
-        if (worldConfig != null) {
-            return worldConfig.applyToConfig(config);
+        synchronized (configLock) {
+            JMWorldConfig worldConfig = this.getConfig().getWorldConfig(player.getLocation().getWorld().getName()).journeymapConfig;
+            JMConfig config = this.getConfig().globalJourneymapConfig;
+            if (worldConfig != null) {
+                return worldConfig.applyToConfig(config);
+            }
+            return config;
         }
-        return config;
     }
 
     public MinimapConfig getConfig() {

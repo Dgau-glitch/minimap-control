@@ -13,6 +13,7 @@ public interface MinimapPlugin {
     void onPluginMessage(String channel, MinimapPlayer player, byte[] message);
 
     void registerChannel(String channel);
+    default void unregisterChannel(String channel) {}
     MinimapServer getServer();
     ConfigurationLoader<CommentedConfigurationNode> getConfigLoader();
     void handleSwitchWorld(MinimapWorld world, MinimapPlayer player);

@@ -17,15 +17,11 @@ repositories {
     maven {
         url = uri("https://oss.sonatype.org/content/groups/public/")
     }
-    maven {
-        url = uri("https://repo.viaversion.com")
-    }
 }
 
 dependencies {
     // Main Dependencies
     compileOnly("dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("com.viaversion:viaversion-api:4.9.2")
     implementation(project(":common"))
 
     // Common Dependencies
