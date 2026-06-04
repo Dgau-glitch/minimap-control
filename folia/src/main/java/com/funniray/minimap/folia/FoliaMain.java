@@ -53,7 +53,7 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, @NotNull byte[] message) {
-        this.onPluginMessage(channel, new FoliaPlayer(player), message);
+        schedulerService.runForPlayer(player, () -> this.onPluginMessage(channel, new FoliaPlayer(player), message));
     }
 
     @EventHandler
@@ -71,6 +71,7 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
-        this.handleSwitchWorld(new FoliaWorld(event.getPlayer().getWorld()), new FoliaPlayer(event.getPlayer()));
+        Player player = event.getPlayer();
+        schedulerService.runForPlayer(player, () -> this.handleSwitchWorld(new FoliaWorld(player.getWorld()), new FoliaPlayer(player)));
     }
 }

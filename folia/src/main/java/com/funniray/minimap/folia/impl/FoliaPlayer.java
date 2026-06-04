@@ -4,8 +4,9 @@ import com.funniray.minimap.common.api.MinimapLocation;
 import com.funniray.minimap.common.api.MinimapPlayer;
 import com.funniray.minimap.common.version.Version;
 import com.funniray.minimap.folia.FoliaMinimap;
+import com.funniray.minimap.folia.service.FoliaSchedulerService;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
@@ -20,27 +21,29 @@ public class FoliaPlayer implements MinimapPlayer {
 
     @Override
     public void sendPluginMessage(byte[] message, String channel) {
-        FoliaMinimap.getInstance().getSchedulerService().runForPlayer(nativePlayer, () -> nativePlayer.sendPluginMessage(FoliaMinimap.getInstance(), channel, message));
+        schedulerService().runForPlayer(nativePlayer, () -> nativePlayer.sendPluginMessage(FoliaMinimap.getInstance(), channel, message));
     }
 
     @Override
     public void sendMessage(Component message) {
-        FoliaMinimap.getInstance().adventure().player(nativePlayer).sendMessage(message);
+        schedulerService().runForPlayer(nativePlayer, () -> FoliaMinimap.getInstance().adventure().player(nativePlayer).sendMessage(message));
     }
 
     @Override
     public void teleport(MinimapLocation location) {
-        nativePlayer.teleportAsync(((FoliaLocation) location).getNativeLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+        Location nativeLocation = ((FoliaLocation) location).getNativeLocation();
+        schedulerService().runForPlayer(nativePlayer, () -> nativePlayer.teleportAsync(nativeLocation, PlayerTeleportEvent.TeleportCause.COMMAND));
     }
 
     @Override
     public MinimapLocation getLocation() {
+        ensureOnPlayerThread();
         return new FoliaLocation(nativePlayer.getLocation());
     }
 
     @Override
     public void disconnect(Component reason) {
-        nativePlayer.kickPlayer(LegacyComponentSerializer.legacy('\u00a7').serialize(reason));
+        schedulerService().runForPlayer(nativePlayer, () -> nativePlayer.kick(reason));
     }
 
     @Override
@@ -55,11 +58,13 @@ public class FoliaPlayer implements MinimapPlayer {
 
     @Override
     public boolean hasPermission(String string) {
+        ensureOnPlayerThread();
         return nativePlayer.hasPermission(string);
     }
 
     @Override
     public Version getVersion() {
+        ensureOnPlayerThread();
         FoliaMinimap plugin = FoliaMinimap.getInstance();
         if (plugin.viaHooked) {
             return plugin.viaHook.getPlayerVersion(this);
@@ -69,6 +74,15 @@ public class FoliaPlayer implements MinimapPlayer {
     }
 
     public Player getNativePlayer() {
+        ensureOnPlayerThread();
         return nativePlayer;
+    }
+
+    private void ensureOnPlayerThread() {
+        schedulerService().ensureOnPlayerThread(nativePlayer);
+    }
+
+    private FoliaSchedulerService schedulerService() {
+        return FoliaMinimap.getInstance().getSchedulerService();
     }
 }

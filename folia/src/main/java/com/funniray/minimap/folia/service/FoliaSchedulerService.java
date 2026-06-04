@@ -1,5 +1,6 @@
 package com.funniray.minimap.folia.service;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -46,6 +47,16 @@ public class FoliaSchedulerService {
         plugin.getServer()
                 .getAsyncScheduler()
                 .runNow(plugin, scheduledTask -> runTask(task));
+    }
+
+    public boolean isOnPlayerThread(Player player) {
+        return Bukkit.isOwnedByCurrentRegion(Objects.requireNonNull(player, "player"));
+    }
+
+    public void ensureOnPlayerThread(Player player) {
+        if (!isOnPlayerThread(player)) {
+            throw new IllegalStateException("Player-bound MinimapPlayer operations must run on the player's owning Folia entity thread. Schedule with FoliaSchedulerService#runForPlayer first.");
+        }
     }
 
     private void runIfPlayerAvailable(Player player, Runnable task) {
