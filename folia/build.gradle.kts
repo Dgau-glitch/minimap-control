@@ -18,20 +18,21 @@ repositories {
         url = uri("https://oss.sonatype.org/content/groups/public/")
     }
     maven {
-        url = uri("https://repo.viaversion.com")
+        name = "ViaVersion"
+        url = uri("https://repo.viaversion.com/everything")
     }
 }
 
 dependencies {
     constraints {
-        compileOnly("com.viaversion:viaversion-api:4.9.2") {
-            because("Keep the compile-only ViaVersion API pinned to the tested version and avoid resolving 5.0.0 from remote repositories during Folia builds.")
+        compileOnly("com.viaversion:viaversion-api:5.7.2") {
+            because("Keep the compile-only ViaVersion API pinned to the requested tested version.")
         }
     }
 
     // Main Dependencies
     compileOnly("dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("com.viaversion:viaversion-api:4.9.2")
+    compileOnly("com.viaversion:viaversion-api:5.7.2")
     implementation(project(":common"))
 
     // Common Dependencies
@@ -47,8 +48,8 @@ dependencies {
 configurations.configureEach {
     resolutionStrategy.eachDependency {
         if (requested.group == "com.viaversion" && requested.name == "viaversion-api") {
-            useVersion("4.9.2")
-            because("Folia module compiles against ViaVersion API 4.9.2; do not upgrade to 5.0.0 implicitly.")
+            useVersion("5.7.2")
+            because("Folia module compiles against the requested ViaVersion API 5.7.2.")
         }
     }
 }
