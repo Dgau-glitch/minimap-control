@@ -60,7 +60,8 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
     public void onJoin(PlayerJoinEvent event) {
         // The player join event is slightly too early. I unfortunately don't know an event that fires late enough for Xaeros to recognize the packet
         // If anyone knows, please let me know
-        schedulerService.runForPlayerLater(event.getPlayer(), 40L, () -> this.handlePlayerJoined(new FoliaPlayer(event.getPlayer())));
+        Player player = event.getPlayer();
+        schedulerService.runForPlayerLater(player, 40L, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
     }
 
     @EventHandler

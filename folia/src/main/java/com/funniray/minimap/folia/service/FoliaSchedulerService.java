@@ -16,16 +16,18 @@ public class FoliaSchedulerService {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
     }
 
-    public void runForPlayer(Player player, Runnable task) {
-        Objects.requireNonNull(player, "player")
-                .getScheduler()
-                .run(plugin, scheduledTask -> runTask(task), null);
+    public boolean runForPlayer(Player player, Runnable task) {
+        Player target = Objects.requireNonNull(player, "player");
+        Runnable validatedTask = () -> runIfPlayerAvailable(target, task);
+
+        return target.getScheduler().run(plugin, scheduledTask -> validatedTask.run(), () -> { }) != null;
     }
 
-    public void runForPlayerLater(Player player, long delayTicks, Runnable task) {
-        Objects.requireNonNull(player, "player")
-                .getScheduler()
-                .runDelayed(plugin, scheduledTask -> runTask(task), null, delayTicks);
+    public boolean runForPlayerLater(Player player, long delayTicks, Runnable task) {
+        Player target = Objects.requireNonNull(player, "player");
+        Runnable validatedTask = () -> runIfPlayerAvailable(target, task);
+
+        return target.getScheduler().runDelayed(plugin, scheduledTask -> validatedTask.run(), () -> { }, delayTicks) != null;
     }
 
     public void runAtLocation(Location location, Runnable task) {
@@ -44,6 +46,14 @@ public class FoliaSchedulerService {
         plugin.getServer()
                 .getAsyncScheduler()
                 .runNow(plugin, scheduledTask -> runTask(task));
+    }
+
+    private void runIfPlayerAvailable(Player player, Runnable task) {
+        if (!player.isOnline() || !player.isValid()) {
+            return;
+        }
+
+        runTask(task);
     }
 
     private void runTask(Runnable task) {
