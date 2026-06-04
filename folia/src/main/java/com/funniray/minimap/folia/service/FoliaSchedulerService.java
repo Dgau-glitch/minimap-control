@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Centralized Folia-aware scheduling boundary for all platform-side tasks.
@@ -47,6 +48,14 @@ public class FoliaSchedulerService {
         plugin.getServer()
                 .getAsyncScheduler()
                 .runNow(plugin, scheduledTask -> runTask(task));
+    }
+
+    public void runForEachOnlinePlayer(Consumer<Player> playerTask) {
+        runGlobal(() -> plugin.getServer().getOnlinePlayers().forEach(player -> runForPlayer(player, () -> playerTask.accept(player))));
+    }
+
+    public boolean isOnGlobalThread() {
+        return Bukkit.isGlobalTickThread();
     }
 
     public boolean isOnPlayerThread(Player player) {

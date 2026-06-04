@@ -137,7 +137,7 @@ public class JMHandler implements MessageHandler {
 
         String finalPermChannel = permChannel;
         int finalReplyInt = replyInt;
-        plugin.getServer().getPlayers().forEach(p->handlePerm(p, new byte[0], finalPermChannel, finalReplyInt));
+        plugin.getServer().forEachPlayer(p->handlePerm(p, new byte[0], finalPermChannel, finalReplyInt));
     }
 
     public void handleVersion(MinimapPlayer player, byte[] message, String replyChannel) {

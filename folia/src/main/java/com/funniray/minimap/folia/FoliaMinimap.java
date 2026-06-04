@@ -1,5 +1,6 @@
 package com.funniray.minimap.folia;
 
+import com.funniray.minimap.folia.impl.FoliaServer;
 import com.funniray.minimap.folia.service.FoliaSchedulerService;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,6 +27,7 @@ public final class FoliaMinimap extends JavaPlugin {
         // Plugin startup logic
         instance = this;
         this.adventure = BukkitAudiences.create(this);
+        FoliaServer.refreshWorldSnapshot();
         getServer().getPluginManager().registerEvents(main, this);
         main.enableSelf();
 

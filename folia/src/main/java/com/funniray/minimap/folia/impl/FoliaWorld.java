@@ -8,24 +8,32 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class FoliaWorld implements MinimapWorld {
-    private World nativeWorld;
+    private final World nativeWorld;
+    private final String name;
+    private final String keyedName;
 
     public FoliaWorld(World nativeWorld) {
         this.nativeWorld = nativeWorld;
+        this.name = nativeWorld.getName();
+        this.keyedName = resolveKeyedName(nativeWorld, name);
     }
 
     @Override
     public String getName() {
-        return nativeWorld.getName();
+        return name;
     }
 
     public String getKeyedName() {
+        return keyedName;
+    }
+
+    private String resolveKeyedName(World world, String fallbackName) {
         try {
-            Method getKey = nativeWorld.getClass().getMethod("getKey");
-            NamespacedKey key = (NamespacedKey) getKey.invoke(nativeWorld);
+            Method getKey = world.getClass().getMethod("getKey");
+            NamespacedKey key = (NamespacedKey) getKey.invoke(world);
             return key.toString();
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            return getName();
+            return fallbackName;
         }
     }
 

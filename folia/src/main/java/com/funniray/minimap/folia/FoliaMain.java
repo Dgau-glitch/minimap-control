@@ -12,6 +12,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -38,6 +40,11 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
     @Override
     public MinimapServer getServer() {
         return new FoliaServer();
+    }
+
+    @Override
+    public void saveConfig() {
+        schedulerService.runAsync(super::saveConfig);
     }
 
     @Override
@@ -73,5 +80,15 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
     public void onWorldChange(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         schedulerService.runForPlayer(player, () -> this.handleSwitchWorld(new FoliaWorld(player.getWorld()), new FoliaPlayer(player)));
+    }
+
+    @EventHandler
+    public void onWorldLoad(WorldLoadEvent event) {
+        schedulerService.runGlobal(FoliaServer::refreshWorldSnapshot);
+    }
+
+    @EventHandler
+    public void onWorldUnload(WorldUnloadEvent event) {
+        schedulerService.runGlobal(FoliaServer::refreshWorldSnapshot);
     }
 }
