@@ -23,6 +23,12 @@ repositories {
 }
 
 dependencies {
+    constraints {
+        compileOnly("com.viaversion:viaversion-api:4.9.2") {
+            because("Keep the compile-only ViaVersion API pinned to the tested version and avoid resolving 5.0.0 from remote repositories during Folia builds.")
+        }
+    }
+
     // Main Dependencies
     compileOnly("dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("com.viaversion:viaversion-api:4.9.2")
@@ -35,6 +41,16 @@ dependencies {
     implementation("net.kyori:adventure-platform-bukkit:4.3.1")
     implementation("net.kyori:adventure-text-minimessage:4.10.0")
     implementation("net.kyori:adventure-nbt:4.15.0")
+}
+
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "com.viaversion" && requested.name == "viaversion-api") {
+            useVersion("4.9.2")
+            because("Folia module compiles against ViaVersion API 4.9.2; do not upgrade to 5.0.0 implicitly.")
+        }
+    }
 }
 
 val javaTarget = 21
