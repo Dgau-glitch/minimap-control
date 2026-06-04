@@ -51,7 +51,7 @@ public abstract class JavaMinimapPlugin implements MinimapPlugin {
 
     @Override
     public void disableSelf() {
-        System.out.println("Disabled");
+        listenChannels.forEach(this::unregisterChannel);
     }
 
     public void loadConfig() {

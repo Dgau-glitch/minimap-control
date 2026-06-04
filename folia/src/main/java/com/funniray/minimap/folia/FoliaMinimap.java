@@ -43,6 +43,7 @@ public final class FoliaMinimap extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         main.disableSelf();
+        getLogger().info("Disabled");
         if(this.adventure != null) {
             this.adventure.close();
             this.adventure = null;

@@ -38,6 +38,12 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
     }
 
     @Override
+    public void unregisterChannel(String channel) {
+        plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, channel);
+        plugin.getServer().getMessenger().unregisterIncomingPluginChannel(plugin, channel, this);
+    }
+
+    @Override
     public MinimapServer getServer() {
         return new FoliaServer();
     }
