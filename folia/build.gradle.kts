@@ -26,7 +26,7 @@ repositories {
 dependencies {
     // Main Dependencies
     compileOnly("dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly(files("libs/viaversion-api-5.7.2.jar"))
+    compileOnly("com.viaversion:viaversion-api:5.7.2")
     implementation(project(":common"))
 
     // Common Dependencies
