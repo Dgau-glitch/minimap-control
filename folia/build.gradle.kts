@@ -19,7 +19,7 @@ repositories {
     }
     maven {
         name = "ViaVersion"
-        url = uri("https://repo.viaversion.com/everything")
+        url = uri("https://repo.viaversion.com")
     }
 }
 
