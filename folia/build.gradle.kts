@@ -76,5 +76,6 @@ bukkit {
     description = "Control minimap settings from server-side software"
 
     apiVersion = "1.21"
+    foliaSupported = true
     softDepend = listOf("viaversion")
 }
