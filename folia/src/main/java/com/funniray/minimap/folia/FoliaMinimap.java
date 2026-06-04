@@ -34,7 +34,7 @@ public final class FoliaMinimap extends JavaPlugin {
         try {
             this.viaHook = new ViaHook();
             this.viaHooked = true;
-        } catch (ClassNotFoundException | NoClassDefFoundError e ) {
+        } catch (ReflectiveOperationException | NoClassDefFoundError e ) {
             // failed to hook viaversion. Expected if viaversion isn't installed.
         }
     }
