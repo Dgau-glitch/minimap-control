@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class FoliaPlayer implements MinimapPlayer {
     private final Player nativePlayer;
@@ -44,6 +45,21 @@ public class FoliaPlayer implements MinimapPlayer {
     @Override
     public void disconnect(Component reason) {
         schedulerService().runForPlayer(nativePlayer, () -> nativePlayer.kick(reason));
+    }
+
+    @Override
+    public CompletableFuture<MinimapLocation> getLocationAsync() {
+        return schedulerService().supplyForPlayer(nativePlayer, this::getLocation);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> hasPermissionAsync(String string) {
+        return schedulerService().supplyForPlayer(nativePlayer, () -> hasPermission(string));
+    }
+
+    @Override
+    public CompletableFuture<Version> getVersionAsync() {
+        return schedulerService().supplyForPlayer(nativePlayer, this::getVersion);
     }
 
     @Override

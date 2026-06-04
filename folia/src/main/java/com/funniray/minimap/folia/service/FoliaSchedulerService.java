@@ -6,7 +6,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Centralized Folia-aware scheduling boundary for all platform-side tasks.
@@ -30,6 +32,19 @@ public class FoliaSchedulerService {
         Runnable validatedTask = () -> runIfPlayerAvailable(target, task);
 
         return target.getScheduler().runDelayed(plugin, scheduledTask -> validatedTask.run(), () -> { }, delayTicks) != null;
+    }
+
+    public <T> CompletableFuture<T> supplyForPlayer(Player player, Supplier<T> supplier) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        Player target = Objects.requireNonNull(player, "player");
+        Supplier<T> checkedSupplier = Objects.requireNonNull(supplier, "supplier");
+
+        boolean scheduled = target.getScheduler().run(plugin, scheduledTask -> completeIfPlayerAvailable(target, checkedSupplier, future), () -> completeRetired(future)) != null;
+        if (!scheduled) {
+            completeRetired(future);
+        }
+
+        return future;
     }
 
     public void runAtLocation(Location location, Runnable task) {
@@ -66,6 +81,23 @@ public class FoliaSchedulerService {
         if (!isOnPlayerThread(player)) {
             throw new IllegalStateException("Player-bound MinimapPlayer operations must run on the player's owning Folia entity thread. Schedule with FoliaSchedulerService#runForPlayer first.");
         }
+    }
+
+    private <T> void completeIfPlayerAvailable(Player player, Supplier<T> supplier, CompletableFuture<T> future) {
+        if (!player.isOnline() || !player.isValid()) {
+            completeRetired(future);
+            return;
+        }
+
+        try {
+            future.complete(supplier.get());
+        } catch (Throwable throwable) {
+            future.completeExceptionally(throwable);
+        }
+    }
+
+    private <T> void completeRetired(CompletableFuture<T> future) {
+        future.completeExceptionally(new IllegalStateException("Player scheduler is retired or player is offline."));
     }
 
     private void runIfPlayerAvailable(Player player, Runnable task) {
