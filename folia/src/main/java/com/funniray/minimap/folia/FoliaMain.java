@@ -1,6 +1,7 @@
 package com.funniray.minimap.folia;
 
 import com.funniray.minimap.common.JavaMinimapPlugin;
+import com.funniray.minimap.common.MinimapConfig;
 import com.funniray.minimap.common.api.MinimapServer;
 import com.funniray.minimap.folia.impl.FoliaPlayer;
 import com.funniray.minimap.folia.impl.FoliaServer;
@@ -50,7 +51,8 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @Override
     public void saveConfig() {
-        schedulerService.runAsync(super::saveConfig);
+        MinimapConfig snapshot = snapshotConfig();
+        schedulerService.runAsync(() -> saveConfigSnapshot(snapshot));
     }
 
     @Override

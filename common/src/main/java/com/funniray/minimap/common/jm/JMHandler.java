@@ -111,19 +111,20 @@ public class JMHandler implements MessageHandler {
         String payload = NetworkUtils.readUtf(in);
 
         Gson gson = new Gson();
-        if (type == 1) {
-            JMConfig newConfig = gson.fromJson(payload, JMConfig.class);
-            plugin.getConfig().globalJourneymapConfig = newConfig;
-        } else if (type == 2 || type == 3) {
-            JMWorldConfig newConfig = gson.fromJson(payload, JMWorldConfig.class);
-            if (type == 3) {
-                MinimapConfig.WorldConfig worldConfig = plugin.getConfig().getWorldConfig(dimension);
-                worldConfig.journeymapConfig = newConfig;
-                System.out.println(dimension);
-            } else {
-                plugin.getConfig().defaultWorldConfig = newConfig;
+        plugin.withConfigLock(() -> {
+            if (type == 1) {
+                JMConfig newConfig = gson.fromJson(payload, JMConfig.class);
+                plugin.getConfig().globalJourneymapConfig = newConfig;
+            } else if (type == 2 || type == 3) {
+                JMWorldConfig newConfig = gson.fromJson(payload, JMWorldConfig.class);
+                if (type == 3) {
+                    MinimapConfig.WorldConfig worldConfig = plugin.getConfig().getWorldConfig(dimension);
+                    worldConfig.journeymapConfig = newConfig;
+                } else {
+                    plugin.getConfig().defaultWorldConfig = newConfig;
+                }
             }
-        }
+        });
         plugin.saveConfig();
 
         // Probably not correct, as a 1.16 admin could send an invalid packet

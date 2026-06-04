@@ -28,7 +28,7 @@ public class MinimapConfig {
             .map(MinimapWorld::getName)
             .collect(Collectors.toMap(s->s, s->new WorldConfig()));
 
-    public WorldConfig getWorldConfig(String world) {
+    public synchronized WorldConfig getWorldConfig(String world) {
         WorldConfig conf = worlds.get(world);
 
         if (conf == null) {

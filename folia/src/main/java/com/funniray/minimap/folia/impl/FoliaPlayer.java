@@ -83,7 +83,7 @@ public class FoliaPlayer implements MinimapPlayer {
         ensureOnPlayerThread();
         FoliaMinimap plugin = FoliaMinimap.getInstance();
         if (plugin.viaHooked) {
-            return plugin.viaHook.getPlayerVersion(this);
+            return plugin.viaHook.getPlayerVersion(nativePlayer);
         } else {
             return new FoliaServer().getMinecraftVersion();
         }
