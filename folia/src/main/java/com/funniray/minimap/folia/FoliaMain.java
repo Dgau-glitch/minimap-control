@@ -73,19 +73,8 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        schedulePlayerJoinHandling(event.getPlayer());
-    }
-
-    private void schedulePlayerJoinHandling(Player player) {
-        Runnable joinTask = () -> this.handlePlayerJoined(new FoliaPlayer(player));
-        long delayTicks = Math.max(0L, getConfig().playerJoinSettingsDelayTicks);
-
-        if (delayTicks == 0L) {
-            schedulerService.runForPlayer(player, joinTask);
-            return;
-        }
-
-        schedulerService.runForPlayerLater(player, delayTicks, joinTask);
+        Player player = event.getPlayer();
+        schedulerService.runForPlayer(player, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
     }
 
     @EventHandler

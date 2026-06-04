@@ -18,10 +18,6 @@ import java.util.stream.Collectors;
 
 @ConfigSerializable
 public class MinimapConfig {
-    @Comment("Delay in server ticks before sending minimap settings after a player joins. " +
-            "The default 40 ticks is about two seconds at 20 TPS and avoids racing client-side " +
-            "minimap plugin-channel initialization. Set to 0 to send on the next Folia entity tick.")
-    public long playerJoinSettingsDelayTicks = 40L;
     public String worldId = UUID.randomUUID().toString();
     public JMConfig globalJourneymapConfig = new JMConfig();
     public XaerosConfig globalXaerosConfig = new XaerosConfig();
