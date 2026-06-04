@@ -1,44 +1,41 @@
-package com.funniray.minimap.spigot.impl;
+package com.funniray.minimap.folia.impl;
 
 import com.funniray.minimap.common.api.MinimapLocation;
 import com.funniray.minimap.common.api.MinimapPlayer;
 import com.funniray.minimap.common.version.Version;
-import com.funniray.minimap.spigot.SpigotMinimap;
-import io.papermc.lib.PaperLib;
-import net.kyori.adventure.platform.bukkit.MinecraftComponentSerializer;
+import com.funniray.minimap.folia.FoliaMinimap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.util.UUID;
 
-public class SpigotPlayer implements MinimapPlayer {
+public class FoliaPlayer implements MinimapPlayer {
     private final Player nativePlayer;
 
-    public SpigotPlayer(Player player) {
+    public FoliaPlayer(Player player) {
         nativePlayer = player;
     }
 
     @Override
     public void sendPluginMessage(byte[] message, String channel) {
-        Bukkit.getScheduler().runTask(SpigotMinimap.getInstance(), ()->nativePlayer.sendPluginMessage(SpigotMinimap.getInstance(), channel, message));
+        nativePlayer.getScheduler().run(FoliaMinimap.getInstance(), task -> nativePlayer.sendPluginMessage(FoliaMinimap.getInstance(), channel, message), null);
     }
 
     @Override
     public void sendMessage(Component message) {
-        SpigotMinimap.getInstance().adventure().player(nativePlayer).sendMessage(message);
+        FoliaMinimap.getInstance().adventure().player(nativePlayer).sendMessage(message);
     }
 
     @Override
     public void teleport(MinimapLocation location) {
-        PaperLib.teleportAsync(nativePlayer, ((SpigotLocation) location).getNativeLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+        nativePlayer.teleportAsync(((FoliaLocation) location).getNativeLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
     }
 
     @Override
     public MinimapLocation getLocation() {
-        return new SpigotLocation(nativePlayer.getLocation());
+        return new FoliaLocation(nativePlayer.getLocation());
     }
 
     @Override
@@ -63,11 +60,11 @@ public class SpigotPlayer implements MinimapPlayer {
 
     @Override
     public Version getVersion() {
-        SpigotMinimap plugin = SpigotMinimap.getInstance();
+        FoliaMinimap plugin = FoliaMinimap.getInstance();
         if (plugin.viaHooked) {
             return plugin.viaHook.getPlayerVersion(this);
         } else {
-            return new SpigotServer().getMinecraftVersion();
+            return new FoliaServer().getMinecraftVersion();
         }
     }
 

@@ -1,11 +1,11 @@
-package com.funniray.minimap.spigot;
+package com.funniray.minimap.folia;
 
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class SpigotMinimap extends JavaPlugin {
-    private static SpigotMinimap instance;
-    private final SpigotMain main = new SpigotMain(this);
+public final class FoliaMinimap extends JavaPlugin {
+    private static FoliaMinimap instance;
+    private final FoliaMain main = new FoliaMain(this);
 
     public ViaHook viaHook;
     public boolean viaHooked;
@@ -45,7 +45,7 @@ public final class SpigotMinimap extends JavaPlugin {
         }
     }
 
-    public static SpigotMinimap getInstance() {
+    public static FoliaMinimap getInstance() {
         return instance;
     }
 }

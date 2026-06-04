@@ -1,9 +1,9 @@
-package com.funniray.minimap.spigot;
+package com.funniray.minimap.folia;
 
 import com.funniray.minimap.common.api.MinimapPlayer;
 import com.funniray.minimap.common.version.Version;
-import com.funniray.minimap.spigot.impl.SpigotPlayer;
-import com.funniray.minimap.spigot.impl.SpigotServer;
+import com.funniray.minimap.folia.impl.FoliaPlayer;
+import com.funniray.minimap.folia.impl.FoliaServer;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
@@ -18,12 +18,12 @@ public class ViaHook {
     }
 
     public Version getPlayerVersion(MinimapPlayer p) {
-        int protoVersion = api.getPlayerVersion(((SpigotPlayer)p).getNativePlayer());
+        int protoVersion = api.getPlayerVersion(((FoliaPlayer)p).getNativePlayer());
         ProtocolVersion version = ProtocolVersion.getProtocol(protoVersion);
 
         if (!ProtocolVersion.isRegistered(protoVersion)) {
-            SpigotMinimap.getInstance().getLogger().info("ViaVersion returned unknown for player "+p.getUsername()+" (protocol version "+protoVersion+"). This may cause issues if they're using Xaero's minimap. Consider updating ViaVersion");
-            return new SpigotServer().getMinecraftVersion();
+            FoliaMinimap.getInstance().getLogger().info("ViaVersion returned unknown for player "+p.getUsername()+" (protocol version "+protoVersion+"). This may cause issues if they're using Xaero's minimap. Consider updating ViaVersion");
+            return new FoliaServer().getMinecraftVersion();
         }
 
         String[] ver = version.getName().replaceAll("x","0").split("-")[0].split("\\.");

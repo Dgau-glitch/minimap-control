@@ -1,4 +1,4 @@
-package com.funniray.minimap.spigot.impl;
+package com.funniray.minimap.folia.impl;
 
 import com.funniray.minimap.common.api.MinimapPlayer;
 import com.funniray.minimap.common.api.MinimapServer;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.Integer.parseInt;
 
-public class SpigotServer implements MinimapServer {
+public class FoliaServer implements MinimapServer {
     @Override
     public Version getMinecraftVersion() {
         String[] ver = Bukkit.getBukkitVersion().split("-")[0].split("\\.");
@@ -35,14 +35,14 @@ public class SpigotServer implements MinimapServer {
     @Override
     public List<MinimapPlayer> getPlayers() {
         return Bukkit.getServer().getOnlinePlayers().stream()
-                .map(SpigotPlayer::new)
+                .map(FoliaPlayer::new)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<MinimapWorld> getWorlds() {
         return Bukkit.getWorlds().stream()
-                .map(SpigotWorld::new)
+                .map(FoliaWorld::new)
                 .collect(Collectors.toList());
     }
 }

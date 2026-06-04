@@ -1,7 +1,7 @@
 plugins {
     `java-library`
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("net.minecrell.plugin-yml.bukkit") version "0.5.2"
+    id("com.gradleup.shadow") version "9.3.2"
+    id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
 }
 
 val versionStr = (System.getenv("VERSION")?: "v1.0.0").removePrefix("v")
@@ -15,9 +15,6 @@ repositories {
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
     maven {
-        url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    }
-    maven {
         url = uri("https://oss.sonatype.org/content/groups/public/")
     }
     maven {
@@ -27,12 +24,11 @@ repositories {
 
 dependencies {
     // Main Dependencies
-    compileOnly("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
+    compileOnly("dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("com.viaversion:viaversion-api:4.9.2")
     implementation(project(":common"))
 
     // Common Dependencies
-    implementation("io.papermc:paperlib:1.0.6")
     implementation("org.spongepowered:configurate-core:4.1.2")
     implementation("org.spongepowered:configurate-yaml:4.1.2")
     implementation("net.kyori:adventure-api:4.10.0")
@@ -41,7 +37,7 @@ dependencies {
     implementation("net.kyori:adventure-nbt:4.15.0")
 }
 
-val javaTarget = 11
+val javaTarget = 21
 java {
     sourceCompatibility = JavaVersion.toVersion(javaTarget)
     targetCompatibility = JavaVersion.toVersion(javaTarget)
@@ -55,14 +51,13 @@ tasks {
         dependsOn(shadowJar)
     }
     shadowJar {
-        relocate("io.papermc.lib", "com.funniray.minimap.paperlib")
         relocate("org.spongepowered.configurate", "com.funniray.minimap.configurate")
         relocate("net.kyori", "com.funniray.minimap.kyori")
         relocate("io.leangen.geantyref", "com.funniray.minimap.geantyref")
         exclude("com/google/gson/**")
         exclude("org/apache/commons/**")
         exclude("org/yaml/snakeyaml/**")
-        archiveBaseName.set("${rootProject.name}-spigot")
+        archiveBaseName.set("${rootProject.name}-folia")
         archiveClassifier.set("")
         doLast {
             copy {
@@ -75,10 +70,10 @@ tasks {
 
 bukkit {
     name = "MinimapControl"
-    main = "com.funniray.minimap.spigot.SpigotMinimap"
+    main = "com.funniray.minimap.folia.FoliaMinimap"
     authors = listOf("funniray")
     description = "Control minimap settings from server-side software"
 
-    apiVersion = "1.13"
+    apiVersion = "1.21"
     softDepend = listOf("viaversion")
 }

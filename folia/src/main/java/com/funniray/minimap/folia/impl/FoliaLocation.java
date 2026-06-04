@@ -1,13 +1,13 @@
-package com.funniray.minimap.spigot.impl;
+package com.funniray.minimap.folia.impl;
 
 import com.funniray.minimap.common.api.MinimapLocation;
 import com.funniray.minimap.common.api.MinimapWorld;
 import org.bukkit.Location;
 
-public class SpigotLocation implements MinimapLocation {
+public class FoliaLocation implements MinimapLocation {
     private Location nativeLocation;
 
-    public SpigotLocation(Location nativeLocation) {
+    public FoliaLocation(Location nativeLocation) {
         this.nativeLocation = nativeLocation;
     }
 
@@ -28,7 +28,7 @@ public class SpigotLocation implements MinimapLocation {
 
     @Override
     public MinimapWorld getWorld() {
-        return new SpigotWorld(nativeLocation.getWorld());
+        return new FoliaWorld(nativeLocation.getWorld());
     }
 
     public Location getNativeLocation() {

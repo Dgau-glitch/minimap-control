@@ -1,4 +1,4 @@
-package com.funniray.minimap.spigot.impl;
+package com.funniray.minimap.folia.impl;
 
 import com.funniray.minimap.common.api.MinimapLocation;
 import com.funniray.minimap.common.api.MinimapWorld;
@@ -7,10 +7,10 @@ import org.bukkit.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class SpigotWorld implements MinimapWorld {
+public class FoliaWorld implements MinimapWorld {
     private World nativeWorld;
 
-    public SpigotWorld(World nativeWorld) {
+    public FoliaWorld(World nativeWorld) {
         this.nativeWorld = nativeWorld;
     }
 
@@ -33,6 +33,6 @@ public class SpigotWorld implements MinimapWorld {
     public MinimapLocation getLocation(double x, double y, double z) {
         Location location = new Location(nativeWorld, x, y, z);
 
-        return new SpigotLocation(location);
+        return new FoliaLocation(location);
     }
 }

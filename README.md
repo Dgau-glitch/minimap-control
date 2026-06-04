@@ -1,5 +1,5 @@
 # Minimap Control
-This plugin allows players to control how minimaps mods work per world on Spigot or Sponge based servers.
+This plugin allows players to control how minimaps mods work per world on Folia or Sponge based servers.
 
 ## Current Support:
 - Journeymap
