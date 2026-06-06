@@ -53,7 +53,9 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
     @Override
     public void saveConfig() {
         MinimapConfig snapshot = snapshotConfig();
-        schedulerService.runAsync(() -> saveConfigSnapshot(snapshot));
+        if (!schedulerService.runAsync(() -> saveConfigSnapshot(snapshot))) {
+            saveConfigSnapshot(snapshot);
+        }
     }
 
     @Override

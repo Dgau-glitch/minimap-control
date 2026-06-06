@@ -15,27 +15,50 @@ import java.util.function.Supplier;
  */
 public class FoliaSchedulerService {
     private final Plugin plugin;
+    private volatile boolean acceptingTasks = true;
 
     public FoliaSchedulerService(Plugin plugin) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
     }
 
+    public void start() {
+        acceptingTasks = true;
+    }
+
+    public void shutdown() {
+        acceptingTasks = false;
+    }
+
+    public boolean isAcceptingTasks() {
+        return acceptingTasks && plugin.isEnabled();
+    }
+
     public boolean runForPlayer(Player player, Runnable task) {
         Player target = Objects.requireNonNull(player, "player");
-        Runnable validatedTask = () -> runIfPlayerAvailable(target, task);
+        if (!isAcceptingTasks()) {
+            return false;
+        }
 
+        Runnable validatedTask = () -> runIfPlayerAvailable(target, task);
         return target.getScheduler().run(plugin, scheduledTask -> validatedTask.run(), () -> { }) != null;
     }
 
     public boolean runForPlayerLater(Player player, long delayTicks, Runnable task) {
         Player target = Objects.requireNonNull(player, "player");
-        Runnable validatedTask = () -> runIfPlayerAvailable(target, task);
+        if (!isAcceptingTasks()) {
+            return false;
+        }
 
+        Runnable validatedTask = () -> runIfPlayerAvailable(target, task);
         return target.getScheduler().runDelayed(plugin, scheduledTask -> validatedTask.run(), () -> { }, delayTicks) != null;
     }
 
     public boolean runForPlayerOrNow(Player player, Runnable task) {
         Player target = Objects.requireNonNull(player, "player");
+        if (!isAcceptingTasks()) {
+            return false;
+        }
+
         if (isOnPlayerThread(target)) {
             runIfPlayerAvailable(target, task);
             return true;
@@ -49,6 +72,11 @@ public class FoliaSchedulerService {
         Player target = Objects.requireNonNull(player, "player");
         Supplier<T> checkedSupplier = Objects.requireNonNull(supplier, "supplier");
 
+        if (!isAcceptingTasks()) {
+            completeRetired(future);
+            return future;
+        }
+
         boolean scheduled = target.getScheduler().run(plugin, scheduledTask -> completeIfPlayerAvailable(target, checkedSupplier, future), () -> completeRetired(future)) != null;
         if (!scheduled) {
             completeRetired(future);
@@ -57,22 +85,37 @@ public class FoliaSchedulerService {
         return future;
     }
 
-    public void runAtLocation(Location location, Runnable task) {
+    public boolean runAtLocation(Location location, Runnable task) {
+        if (!isAcceptingTasks()) {
+            return false;
+        }
+
         plugin.getServer()
                 .getRegionScheduler()
                 .run(plugin, Objects.requireNonNull(location, "location"), scheduledTask -> runTask(task));
+        return true;
     }
 
-    public void runGlobal(Runnable task) {
+    public boolean runGlobal(Runnable task) {
+        if (!isAcceptingTasks()) {
+            return false;
+        }
+
         plugin.getServer()
                 .getGlobalRegionScheduler()
                 .run(plugin, scheduledTask -> runTask(task));
+        return true;
     }
 
-    public void runAsync(Runnable task) {
+    public boolean runAsync(Runnable task) {
+        if (!isAcceptingTasks()) {
+            return false;
+        }
+
         plugin.getServer()
                 .getAsyncScheduler()
                 .runNow(plugin, scheduledTask -> runTask(task));
+        return true;
     }
 
     public void runForEachOnlinePlayer(Consumer<Player> playerTask) {
