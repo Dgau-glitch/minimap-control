@@ -9,7 +9,6 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import net.kyori.adventure.nbt.BinaryTagIO;
 import net.kyori.adventure.nbt.CompoundBinaryTag;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.io.IOException;
@@ -19,7 +18,6 @@ public class XaerosHandler implements MessageHandler {
 
     public static String XAEROS_CHANNEL = "xaerominimap:main";
     public static String XAEROS_MAP_CHANNEL = "xaeroworldmap:main";
-    private static final Component XAEROS_FAIR_PLAY_MARKER = Component.text("§f§a§i§r§x§a§e§r§o");
 
     public XaerosHandler(JavaMinimapPlugin plugin) {
         this.plugin = plugin;
@@ -35,7 +33,6 @@ public class XaerosHandler implements MessageHandler {
 
     public void sendXaerosConfig(MinimapPlayer player) {
         XaerosConfig config = getEffectiveConfig(player);
-        sendFairPlayMarkerIfNeeded(player, config);
 
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeByte(4);
@@ -67,12 +64,6 @@ public class XaerosHandler implements MessageHandler {
         }
 
         return config.applyOverrides(player);
-    }
-
-    private void sendFairPlayMarkerIfNeeded(MinimapPlayer player, XaerosConfig config) {
-        if (!config.caveMode || !config.netherCaveMode || !config.radar) {
-            player.sendMessage(XAEROS_FAIR_PLAY_MARKER);
-        }
     }
 
     @Override
