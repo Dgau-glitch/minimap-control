@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -26,10 +27,14 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListener, Listener {
     private final FoliaMinimap plugin;
     private final FoliaSchedulerService schedulerService;
+    private final Set<UUID> playersWithRefreshLoop = ConcurrentHashMap.newKeySet();
 
     public FoliaMain(FoliaMinimap plugin, FoliaSchedulerService schedulerService) {
         this.plugin = plugin;
@@ -79,14 +84,22 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        schedulePlayerSettingsRefresh(event.getPlayer(), false);
+        Player player = event.getPlayer();
+        startPlayerSettingsRefreshLoop(player);
+        schedulePlayerInitialSettings(player);
     }
 
     @EventHandler
     public void onPlayerRegisterChannel(PlayerRegisterChannelEvent event) {
         if (isMinimapChannel(event.getChannel())) {
-            schedulePlayerSettingsRefresh(event.getPlayer(), false);
+            startPlayerSettingsRefreshLoop(event.getPlayer());
+            schedulePlayerInitialSettings(event.getPlayer());
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPortal(PlayerPortalEvent event) {
+        schedulePlayerSettingsRefresh(event.getPlayer(), true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -96,11 +109,13 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
+        startPlayerSettingsRefreshLoop(event.getPlayer());
         schedulePlayerSettingsRefresh(event.getPlayer(), true);
     }
 
     @EventHandler
     public void onLeft(PlayerQuitEvent event) {
+        playersWithRefreshLoop.remove(event.getPlayer().getUniqueId());
         this.handlePlayerLeft(new FoliaPlayer(event.getPlayer()));
     }
 
@@ -109,8 +124,12 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
         schedulePlayerSettingsRefresh(event.getPlayer(), true);
     }
 
-    private void schedulePlayerSettingsRefresh(Player player, boolean includePostTransitionRefresh) {
+    private void schedulePlayerInitialSettings(Player player) {
         schedulerService.runForPlayer(player, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
+    }
+
+    private void schedulePlayerSettingsRefresh(Player player, boolean includePostTransitionRefresh) {
+        schedulerService.runForPlayer(player, () -> this.refreshPlayerSettings(new FoliaPlayer(player)));
         if (!includePostTransitionRefresh) {
             return;
         }
@@ -124,7 +143,29 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
                 .filter(delayTicks -> delayTicks != null && delayTicks > 0L)
                 .distinct()
                 .sorted()
-                .forEach(delayTicks -> schedulerService.runForPlayerLater(player, delayTicks, () -> this.handlePlayerJoined(new FoliaPlayer(player))));
+                .forEach(delayTicks -> schedulerService.runForPlayerLater(player, delayTicks, () -> this.refreshPlayerSettings(new FoliaPlayer(player))));
+    }
+
+    private void startPlayerSettingsRefreshLoop(Player player) {
+        if (playersWithRefreshLoop.add(player.getUniqueId())) {
+            scheduleNextPlayerSettingsRefresh(player);
+        }
+    }
+
+    private void scheduleNextPlayerSettingsRefresh(Player player) {
+        long intervalTicks = getConfig().settingsRefreshIntervalTicks;
+        if (intervalTicks <= 0L || !playersWithRefreshLoop.contains(player.getUniqueId())) {
+            return;
+        }
+
+        schedulerService.runForPlayerLater(player, intervalTicks, () -> {
+            if (!playersWithRefreshLoop.contains(player.getUniqueId())) {
+                return;
+            }
+
+            refreshPlayerSettings(new FoliaPlayer(player));
+            scheduleNextPlayerSettingsRefresh(player);
+        });
     }
 
     @EventHandler

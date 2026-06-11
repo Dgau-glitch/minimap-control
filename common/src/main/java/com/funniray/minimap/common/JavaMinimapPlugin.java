@@ -79,13 +79,16 @@ public abstract class JavaMinimapPlugin implements MinimapPlugin {
 
     @Override
     public void handleSwitchWorld(MinimapWorld world, MinimapPlayer player) {
-        xaerosHandler.sendXaerosConfig(player);
-        voxelHandler.sendSettings(player);
+        refreshPlayerSettings(player);
     }
 
     @Override
     public void handlePlayerJoined(MinimapPlayer player) {
         xaerosHandler.sendXaerosHandshake(player);
+        refreshPlayerSettings(player);
+    }
+
+    public void refreshPlayerSettings(MinimapPlayer player) {
         xaerosHandler.sendXaerosConfig(player);
         voxelHandler.sendSettings(player);
         worldInfoHandler.sendPacket(player);
