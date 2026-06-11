@@ -23,3 +23,6 @@ dependencies {
     compileOnly("net.kyori:adventure-text-minimessage:4.10.0")
     compileOnly("net.kyori:adventure-nbt:4.15.0")
 }
+tasks.withType(JavaCompile::class).configureEach {
+    options.compilerArgs.add("-Xlint:-options")
+}

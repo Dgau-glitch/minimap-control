@@ -56,6 +56,10 @@ public abstract class JavaMinimapPlugin implements MinimapPlugin {
         listenChannels.forEach(this::unregisterChannel);
     }
 
+    protected boolean isMinimapChannel(String channel) {
+        return listenChannels.contains(channel);
+    }
+
     public void loadConfig() {
         synchronized (configLock) {
             try {
@@ -75,13 +79,16 @@ public abstract class JavaMinimapPlugin implements MinimapPlugin {
 
     @Override
     public void handleSwitchWorld(MinimapWorld world, MinimapPlayer player) {
-        xaerosHandler.sendXaerosConfig(player);
-        voxelHandler.sendSettings(player);
+        refreshPlayerSettings(player);
     }
 
     @Override
     public void handlePlayerJoined(MinimapPlayer player) {
         xaerosHandler.sendXaerosHandshake(player);
+        refreshPlayerSettings(player);
+    }
+
+    public void refreshPlayerSettings(MinimapPlayer player) {
         xaerosHandler.sendXaerosConfig(player);
         voxelHandler.sendSettings(player);
         worldInfoHandler.sendPacket(player);

@@ -25,6 +25,7 @@ public final class FoliaMinimap extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
+        schedulerService.start();
         instance = this;
         this.adventure = BukkitAudiences.create(this);
         FoliaServer.refreshWorldSnapshot();
@@ -42,6 +43,7 @@ public final class FoliaMinimap extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        schedulerService.shutdown();
         main.disableSelf();
         getLogger().info("Disabled");
         if(this.adventure != null) {

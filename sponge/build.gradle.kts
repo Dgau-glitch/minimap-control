@@ -58,6 +58,7 @@ java {
 tasks.withType(JavaCompile::class).configureEach {
     options.apply {
         encoding = "utf-8" // Consistent source file encoding
+        compilerArgs.add("-Xlint:-options")
         if (JavaVersion.current().isJava10Compatible) {
             release.set(javaTarget)
         }

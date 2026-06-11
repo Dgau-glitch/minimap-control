@@ -19,7 +19,6 @@ public class XaerosHandler implements MessageHandler {
     public static String XAEROS_CHANNEL = "xaerominimap:main";
     public static String XAEROS_MAP_CHANNEL = "xaeroworldmap:main";
 
-
     public XaerosHandler(JavaMinimapPlugin plugin) {
         this.plugin = plugin;
     }
@@ -33,13 +32,7 @@ public class XaerosHandler implements MessageHandler {
     }
 
     public void sendXaerosConfig(MinimapPlayer player) {
-        XaerosWorldConfig worldConfig = plugin.getConfig().getWorldConfig(player.getLocation().getWorld().getName()).xaerosConfig;
-        XaerosConfig config = plugin.getConfig().globalXaerosConfig;
-        if (worldConfig != null && worldConfig.enabled) {
-            config = worldConfig;
-        }
-
-        config = config.applyOverrides(player);
+        XaerosConfig config = getEffectiveConfig(player);
 
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeByte(4);
@@ -60,6 +53,17 @@ public class XaerosHandler implements MessageHandler {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    private XaerosConfig getEffectiveConfig(MinimapPlayer player) {
+        XaerosWorldConfig worldConfig = plugin.getConfig().getWorldConfig(player.getLocation().getWorld().getName()).xaerosConfig;
+        XaerosConfig config = plugin.getConfig().globalXaerosConfig;
+        if (worldConfig != null && worldConfig.enabled) {
+            config = worldConfig;
+        }
+
+        return config.applyOverrides(player);
     }
 
     @Override
