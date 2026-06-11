@@ -5,15 +5,16 @@ import com.funniray.minimap.common.MinimapConfig;
 import com.funniray.minimap.common.api.MinimapServer;
 import com.funniray.minimap.folia.impl.FoliaPlayer;
 import com.funniray.minimap.folia.impl.FoliaServer;
-import com.funniray.minimap.folia.impl.FoliaWorld;
 import com.funniray.minimap.folia.service.FoliaSchedulerService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -25,6 +26,8 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import java.io.File;
 
 public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListener, Listener {
+    private static final long POST_TRANSITION_REFRESH_DELAY_TICKS = 1L;
+
     private final FoliaMinimap plugin;
     private final FoliaSchedulerService schedulerService;
 
@@ -76,18 +79,19 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        schedulePlayerSettingsRefresh(event.getPlayer());
+        schedulePlayerSettingsRefresh(event.getPlayer(), false);
     }
 
     @EventHandler
     public void onPlayerRegisterChannel(PlayerRegisterChannelEvent event) {
         if (isMinimapChannel(event.getChannel())) {
-            schedulePlayerSettingsRefresh(event.getPlayer());
+            schedulePlayerSettingsRefresh(event.getPlayer(), false);
         }
     }
 
-    private void schedulePlayerSettingsRefresh(Player player) {
-        schedulerService.runForPlayer(player, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent event) {
+        schedulePlayerSettingsRefresh(event.getPlayer(), true);
     }
 
     @EventHandler
@@ -95,10 +99,16 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
         this.handlePlayerLeft(new FoliaPlayer(event.getPlayer()));
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldChange(PlayerChangedWorldEvent event) {
-        Player player = event.getPlayer();
-        schedulerService.runForPlayer(player, () -> this.handleSwitchWorld(new FoliaWorld(player.getWorld()), new FoliaPlayer(player)));
+        schedulePlayerSettingsRefresh(event.getPlayer(), true);
+    }
+
+    private void schedulePlayerSettingsRefresh(Player player, boolean includePostTransitionRefresh) {
+        schedulerService.runForPlayer(player, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
+        if (includePostTransitionRefresh) {
+            schedulerService.runForPlayerLater(player, POST_TRANSITION_REFRESH_DELAY_TICKS, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
+        }
     }
 
     @EventHandler
