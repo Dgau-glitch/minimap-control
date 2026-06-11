@@ -6,6 +6,7 @@ import com.funniray.minimap.common.api.MinimapServer;
 import com.funniray.minimap.folia.impl.FoliaPlayer;
 import com.funniray.minimap.folia.impl.FoliaServer;
 import com.funniray.minimap.folia.service.FoliaSchedulerService;
+import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,14 +28,14 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListener, Listener {
     private final FoliaMinimap plugin;
     private final FoliaSchedulerService schedulerService;
-    private final Set<UUID> playersWithRefreshLoop = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Long> playerRefreshLoopVersions = new ConcurrentHashMap<>();
 
     public FoliaMain(FoliaMinimap plugin, FoliaSchedulerService schedulerService) {
         this.plugin = plugin;
@@ -109,13 +110,18 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
-        startPlayerSettingsRefreshLoop(event.getPlayer());
+        restartPlayerSettingsRefreshLoop(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPostRespawn(PlayerPostRespawnEvent event) {
+        restartPlayerSettingsRefreshLoop(event.getPlayer());
         schedulePlayerSettingsRefresh(event.getPlayer(), true);
     }
 
     @EventHandler
     public void onLeft(PlayerQuitEvent event) {
-        playersWithRefreshLoop.remove(event.getPlayer().getUniqueId());
+        playerRefreshLoopVersions.remove(event.getPlayer().getUniqueId());
         this.handlePlayerLeft(new FoliaPlayer(event.getPlayer()));
     }
 
@@ -147,25 +153,37 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
     }
 
     private void startPlayerSettingsRefreshLoop(Player player) {
-        if (playersWithRefreshLoop.add(player.getUniqueId())) {
-            scheduleNextPlayerSettingsRefresh(player);
+        UUID playerId = player.getUniqueId();
+        long loopVersion = 1L;
+        if (playerRefreshLoopVersions.putIfAbsent(playerId, loopVersion) == null) {
+            scheduleNextPlayerSettingsRefresh(player, loopVersion);
         }
     }
 
-    private void scheduleNextPlayerSettingsRefresh(Player player) {
+    private void restartPlayerSettingsRefreshLoop(Player player) {
+        UUID playerId = player.getUniqueId();
+        long loopVersion = playerRefreshLoopVersions.merge(playerId, 1L, Long::sum);
+        scheduleNextPlayerSettingsRefresh(player, loopVersion);
+    }
+
+    private void scheduleNextPlayerSettingsRefresh(Player player, long loopVersion) {
         long intervalTicks = getConfig().settingsRefreshIntervalTicks;
-        if (intervalTicks <= 0L || !playersWithRefreshLoop.contains(player.getUniqueId())) {
+        if (intervalTicks <= 0L || !isCurrentPlayerRefreshLoop(player, loopVersion)) {
             return;
         }
 
         schedulerService.runForPlayerLater(player, intervalTicks, () -> {
-            if (!playersWithRefreshLoop.contains(player.getUniqueId())) {
+            if (!isCurrentPlayerRefreshLoop(player, loopVersion)) {
                 return;
             }
 
             refreshPlayerSettings(new FoliaPlayer(player));
-            scheduleNextPlayerSettingsRefresh(player);
+            scheduleNextPlayerSettingsRefresh(player, loopVersion);
         });
+    }
+
+    private boolean isCurrentPlayerRefreshLoop(Player player, long loopVersion) {
+        return playerRefreshLoopVersions.getOrDefault(player.getUniqueId(), 0L) == loopVersion;
     }
 
     @EventHandler
