@@ -11,13 +11,19 @@ import com.funniray.minimap.common.xaeros.XaerosWorldConfig;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ConfigSerializable
 public class MinimapConfig {
+    @Comment("Additional server-tick retries for resending minimap settings after teleport/world transitions. " +
+            "Settings are always sent immediately first; these retries handle clients that reset map state " +
+            "after the dimension or Folia region transition finishes.")
+    public List<Long> transitionSettingsRefreshTicks = Arrays.asList(1L, 2L, 5L, 10L, 20L, 40L);
     public String worldId = UUID.randomUUID().toString();
     public JMConfig globalJourneymapConfig = new JMConfig();
     public XaerosConfig globalXaerosConfig = new XaerosConfig();

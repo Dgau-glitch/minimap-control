@@ -24,10 +24,9 @@ import org.spongepowered.configurate.loader.ConfigurationLoader;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.File;
+import java.util.Collection;
 
 public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListener, Listener {
-    private static final long POST_TRANSITION_REFRESH_DELAY_TICKS = 1L;
-
     private final FoliaMinimap plugin;
     private final FoliaSchedulerService schedulerService;
 
@@ -106,9 +105,20 @@ public class FoliaMain extends JavaMinimapPlugin implements PluginMessageListene
 
     private void schedulePlayerSettingsRefresh(Player player, boolean includePostTransitionRefresh) {
         schedulerService.runForPlayer(player, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
-        if (includePostTransitionRefresh) {
-            schedulerService.runForPlayerLater(player, POST_TRANSITION_REFRESH_DELAY_TICKS, () -> this.handlePlayerJoined(new FoliaPlayer(player)));
+        if (!includePostTransitionRefresh) {
+            return;
         }
+
+        Collection<Long> refreshTicks = getConfig().transitionSettingsRefreshTicks;
+        if (refreshTicks == null) {
+            return;
+        }
+
+        refreshTicks.stream()
+                .filter(delayTicks -> delayTicks != null && delayTicks > 0L)
+                .distinct()
+                .sorted()
+                .forEach(delayTicks -> schedulerService.runForPlayerLater(player, delayTicks, () -> this.handlePlayerJoined(new FoliaPlayer(player))));
     }
 
     @EventHandler
